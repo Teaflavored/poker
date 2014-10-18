@@ -6,27 +6,28 @@
 #hand should hold an array of cards
 
 require 'hand'
+require 'card'
 
 RSpec.describe Hand do
-  let(:card1) { double("card1", value: 5, suit: :club, to_s: "Five of Clubs") }
-  let(:card2) { double("card2", value: 5, suit: :heart, to_s: "Five of Clubs") }
-  let(:card3) { double("card3", value: 10, suit: :heart, to_s: "Five of Clubs") }
-  let(:card4) { double("card4", value: 10, suit: :club, to_s: "Five of Clubs") }
-  let(:card5) { double("card5", value: 5, suit: :diamond, to_s: "Five of Clubs") }
-  let(:card6) { double("card6") }
-  let(:deck) { double("deck", deal_cards: [card1,card2,card3,card4,card5]) }
-  let(:deck2) { double("deck2", deal_cards: [card6]) } 
-  subject(:hand) { Hand.new(deck) }
-
+  let(:cards) { [Card.new(5, :club),
+                 Card.new(6, :club),
+                 Card.new(10, :heart),
+                 Card.new(11, :diamond),
+                 Card.new(12, :spade)] } 
+  subject(:hand) { Hand.new(cards) }
+  let(:hand1) { Hand.new(cards) }
+  let(:hand2) { Hand.new(cards) }
   
-  describe "starting properties" do
+  describe "card properties" do
     
     it "holds an array of cards" do
       expect(hand.cards).to be_an(Array)
     end
     
     it "contains 5 actual card objects" do
-      expect(hand.cards).to include(card1)
+      cards.each do |card|
+        expect(hand.cards).to include(card)
+      end
     end
     
     it "starts with 5 cards" do
@@ -41,23 +42,24 @@ RSpec.describe Hand do
     end
     
     it "discards unwanted cards" do
-      hand.discard([0, 1, 2])
-      expect(hand.size).to eq(2)
-      expect(hand.cards).to include(card4)
-      expect(hand.cards).not_to include(card3)
+      discard_pos = [1, 2]
+      non_discarded_card = hand.cards[0]
+      discarded_card = hand.cards[1]
+      hand.discard(discard_pos)
+      
+      expect(hand.size).to eq(3)
+      expect(hand.cards).to include(non_discarded_card)
+      expect(hand.cards).not_to include(discarded_card)
     end
     
-    it "draws cards from deck" do
-      expect(deck2).to receive(:deal_cards).with(1)
+    let(:new_cards) { [Card.new(7, :heart), Card.new(8, :heart)] }
+    
+    it "gets cards and puts them in hand" do
+      hand.get_cards(new_cards)
       
-      hand.draw_from_deck(deck2, 1)
+      expect(hand.cards).to include(new_cards[0])
     end
     
-    it "includes the drawn card" do
-      hand.draw_from_deck(deck2, 1)
-      
-      expect(hand.cards).to include(card6)
-    end
   end
   
   
@@ -68,184 +70,221 @@ RSpec.describe Hand do
     end
     
   end
+                     
+  let(:straight_flush) { [
+    Card.new(5, :club),
+    Card.new(6, :club),
+    Card.new(7, :club),
+    Card.new(8, :club),
+    Card.new(9, :club)]
+  } 
   
-  #straight flush
-  let(:card6) { double("card", value: 2, suit: :club) }
-  let(:card7) { double("card", value: 3, suit: :club) }
-  let(:card8) { double("card", value: 4, suit: :club) }
-  let(:card9) { double("card", value: 5, suit: :club) }
-  let(:card10) { double("card", value: 6, suit: :club) }
+  let(:royal_flush) { [
+    Card.new(10, :club),
+    Card.new(11, :club),
+    Card.new(12, :club),
+    Card.new(13, :club),
+    Card.new(14, :club)]
+  }
   
+  let(:four_of_a_kind) { [
+    Card.new(10, :club),
+    Card.new(10, :diamond),
+    Card.new(10, :heart),
+    Card.new(10, :spade),
+    Card.new(14, :club)]
+  }
   
-  #royal flush
-  let(:card11) { double("card", value: 10, suit: :club) }
-  let(:card12) { double("card", value: 11, suit: :club) }
-  let(:card13) { double("card", value: 12, suit: :club) }
-  let(:card14) { double("card", value: 13, suit: :club) }
-  let(:card15) { double("card", value: 14, suit: :club) }
+  let(:full_house) { [
+    Card.new(5, :heart),
+    Card.new(5, :club),
+    Card.new(5, :diamond),
+    Card.new(3, :heart),
+    Card.new(3, :club)]
+  } 
   
-  #fours
-  let(:card16) { double("card", value: 10, suit: :club) }
-  let(:card17) { double("card", value: 10, suit: :club) }
-  let(:card18) { double("card", value: 10, suit: :club) }
-  let(:card19) { double("card", value: 10, suit: :club) }
-  let(:card20) { double("card", value: 14, suit: :club) }
+  let(:flush) { [
+    Card.new(10, :club),
+    Card.new(9, :club),
+    Card.new(2, :club),
+    Card.new(3, :club),
+    Card.new(14, :club)]
+  }
   
-  #flush
-  let(:card21) { double("card", value: 9, suit: :club) }
-  let(:card22) { double("card", value: 10, suit: :club) }
-  let(:card23) { double("card", value: 11, suit: :club) }
-  let(:card24) { double("card", value: 3, suit: :club) }
-  let(:card25) { double("card", value: 7, suit: :club) }
+  let(:straight) { [
+    Card.new(10, :club),
+    Card.new(9, :diamond),
+    Card.new(8, :heart),
+    Card.new(7, :spade),
+    Card.new(6, :club)]
+  }
   
-  #straight
-  let(:card26) { double("card", value: 2, suit: :club) }
-  let(:card27) { double("card", value: 3, suit: :heart) }
-  let(:card28) { double("card", value: 4, suit: :club) }
-  let(:card29) { double("card", value: 5, suit: :club) }
-  let(:card30) { double("card", value: 6, suit: :club) }
+  let(:higher_three_of_a_kind) {[
+    Card.new(11, :club),
+    Card.new(11, :diamond),
+    Card.new(9, :heart),
+    Card.new(11, :spade),
+    Card.new(14, :club)]
+  }
   
-  #threes
-  let(:card31) { double("card", value: 10, suit: :club) }
-  let(:card32) { double("card", value: 10, suit: :heart) }
-  let(:card33) { double("card", value: 10, suit: :club) }
-  let(:card34) { double("card", value: 5, suit: :club) }
-  let(:card35) { double("card", value: 6, suit: :club) }
+  let(:three_of_a_kind) { [
+    Card.new(10, :club),
+    Card.new(10, :diamond),
+    Card.new(9, :heart),
+    Card.new(10, :spade),
+    Card.new(14, :club)]
+  }
   
-  #twopair
-  let(:card36) { double("card", value: 10, suit: :club) }
-  let(:card37) { double("card", value: 10, suit: :heart) }
-  let(:card38) { double("card", value: 5, suit: :club) }
-  let(:card39) { double("card", value: 5, suit: :club) }
-  let(:card40) { double("card", value: 8, suit: :club) }
+  let(:two_pair) { [
+    Card.new(10, :club),
+    Card.new(10, :diamond),
+    Card.new(3, :heart),
+    Card.new(3, :spade),
+    Card.new(11, :club)]
+  }
   
-  #twopairs2
-  let(:card51) { double("card", value: 10, suit: :club) }
-  let(:card52) { double("card", value: 10, suit: :heart) }
-  let(:card53) { double("card", value: 5, suit: :club) }
-  let(:card54) { double("card", value: 5, suit: :club) }
-  let(:card55) { double("card", value: 6, suit: :club) }
+  let(:higher_kicker_two_pair) { [
+    Card.new(10, :club),
+    Card.new(10, :diamond),
+    Card.new(3, :heart),
+    Card.new(3, :spade),
+    Card.new(14, :club)]
+  }
   
-  #pair
-  let(:card41) { double("card", value: 10, suit: :club) }
-  let(:card42) { double("card", value: 10, suit: :heart) }
-  let(:card43) { double("card", value: 7, suit: :club) }
-  let(:card44) { double("card", value: 5, suit: :club) }
-  let(:card45) { double("card", value: 6, suit: :club) }
+  let(:pair) { [
+    Card.new(10, :club),
+    Card.new(10, :diamond),
+    Card.new(11, :heart),
+    Card.new(9, :spade),
+    Card.new(14, :club)]
+  }
   
-  #pair2
-  let(:card56) { double("card", value: 10, suit: :club) }
-  let(:card57) { double("card", value: 10, suit: :heart) }
-  let(:card58) { double("card", value: 7, suit: :club) }
-  let(:card59) { double("card", value: 5, suit: :club) }
-  let(:card60) { double("card", value: 8, suit: :club) }
+  let(:higher_pair) { [
+    Card.new(11, :club),
+    Card.new(11, :diamond),
+    Card.new(10, :heart),
+    Card.new(3, :spade),
+    Card.new(14, :club)]
+  }
   
-  #pair3
-  let(:card61) { double("card", value: 11, suit: :club) }
-  let(:card62) { double("card", value: 11, suit: :heart) }
-  let(:card63) { double("card", value: 7, suit: :club) }
-  let(:card64) { double("card", value: 5, suit: :club) }
-  let(:card65) { double("card", value: 8, suit: :club) }
+  let(:higher_kicker_pair) { [
+    Card.new(10, :club),
+    Card.new(10, :diamond),
+    Card.new(11, :heart),
+    Card.new(12, :spade),
+    Card.new(14, :club)]
+  }
   
-  #mixed
-  let(:card46) { double("card", value: 11, suit: :club) }
-  let(:card47) { double("card", value: 10, suit: :heart) }
-  let(:card48) { double("card", value: 7, suit: :club) }
-  let(:card49) { double("card", value: 5, suit: :club) }
-  let(:card50) { double("card", value: 6, suit: :club) }
+  let(:singles) { [
+    Card.new(10, :club),
+    Card.new(11, :diamond),
+    Card.new(4, :heart),
+    Card.new(7, :spade),
+    Card.new(14, :club)]
+  }
   
   describe "self worth" do
     
-    it "correctly determines a full house" do
-      expect(hand.worth).to eq(:full_house)
+    it "correctly determines a singles" do
+      expect(hand.worth).to eq(:singles)
     end
     
     it "correctly determines a straight flush" do
-      hand.cards = [card6, card7, card8, card9, card10]
+      hand.cards = straight_flush
       expect(hand.worth).to eq(:straight_flush)
     end
   
     it "correctly determines a royal flush" do
-      hand.cards = [card11, card12, card13, card14, card15]
+      hand.cards = royal_flush
       expect(hand.worth).to eq(:royal_flush)
     end 
     
     it "correctly determines a four of a kind" do
-      hand.cards = [card16, card17, card18, card19, card20]
+      hand.cards = four_of_a_kind
       expect(hand.worth).to eq(:four_of_a_kind)
     end
     
+    it "correctly determines a full house" do
+      hand.cards = full_house
+      expect(hand.worth).to eq(:full_house)
+    end
+    
     it "correctly determines a flush" do
-      hand.cards = [card21, card22, card23, card24, card25]
+      hand.cards = flush
       expect(hand.worth).to eq(:flush)
     end
     
     it "correctly determines a straight" do
-      hand.cards = [card26, card27, card28, card29, card30]
+      hand.cards = straight
       expect(hand.worth).to eq(:straight)
     end
     
     it "correctly determines a three of a kind" do
-      hand.cards = [card31, card32, card33, card34, card35]
+      hand.cards = three_of_a_kind
       expect(hand.worth).to eq(:three_of_a_kind)
     end
     
     it "correctly determines a two pair" do
-      hand.cards = [card36, card37, card38, card39, card40]
+      hand.cards = two_pair
       expect(hand.worth).to eq(:two_pair)
     end
    
     it "correctly determines a pair" do
-      hand.cards = [card41, card42, card43, card44, card45]
+      hand.cards = pair
       expect(hand.worth).to eq(:pair)
-    end
-    
-    it "correctly determines a pair" do
-      hand.cards = [card46, card47, card48, card49, card50]
-      expect(hand.worth).to eq(:singles)
     end
   end
   
   
   
   describe "value comparison" do
-    let(:hand1) { Hand.new(deck) }
-    let(:hand2) { Hand.new(deck) }
     
     it "correctly determines easy comparison" do
-      hand1.cards = [card16, card17, card18, card19, card20]
-      hand2.cards = [card31, card32, card33, card34, card35]
+      hand1.cards = full_house
+      hand2.cards = straight
 
       expect(hand1.beats?(hand2)).to be true
       expect(hand2.beats?(hand1)).not_to be true
     end
     
     it "correctly determines straght beats pair" do
-      hand1.cards = [card26, card27, card28, card29, card30]  
-      hand2.cards = [card36, card37, card38, card39, card40]
+      hand1.cards = straight 
+      hand2.cards = pair
       
       expect(hand1.beats?(hand2)).to be true
+      expect(hand2.beats?(hand1)).not_to be true
     end
     
-    it "correctly determines winner when hand level is two pair" do
-      hand1.cards = [card36, card37, card38, card39, card40]
-      hand2.cards = [card51, card52, card53, card54, card55]
+    it "correctly determines winner when one TOAK is better than another TOAK" do
+      hand1.cards = higher_three_of_a_kind
+      hand2.cards = three_of_a_kind
       
       expect(hand1.beats?(hand2)).to be true
+      expect(hand2.beats?(hand1)).not_to be true
+    end
+    
+    it "correctly determines winner when hand level is same two pairs" do
+      hand1.cards = higher_kicker_two_pair
+      hand2.cards = two_pair
+      
+      expect(hand1.beats?(hand2)).to be true
+      expect(hand2.beats?(hand1)).not_to be true
     end
     
     it "correctly determines winner when hand level is pair" do
-      hand1.cards = [card41, card42, card43, card44, card45]
-      hand2.cards = [card56, card57, card58, card59, card60]
+      hand1.cards = higher_kicker_pair
+      hand2.cards = pair
       
-      expect(hand2.beats?(hand1)).to be true
+      expect(hand1.beats?(hand2)).to be true
+      expect(hand2.beats?(hand1)).not_to be true
     end
     
     it "correctly determines winner when one pair is bigger than other pair" do
-      hand1.cards = [card61, card62, card63, card64, card65]
-      hand2.cards = [card56, card57, card58, card59, card60]
+      hand1.cards = higher_pair
+      hand2.cards = pair
       
       expect(hand1.beats?(hand2)).to be true
+      expect(hand2.beats?(hand1)).not_to be true
     end
   end
   

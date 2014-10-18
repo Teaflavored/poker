@@ -2,7 +2,7 @@ require_relative 'deck.rb'
 
 
 class Array
-  def more_than?(other_arr)
+  def greater_than?(other_arr)
     #only works on sorted arrays
     (self.length-1).downto(0).each do |idx|
       next if self[idx] == other_arr[idx]
@@ -10,6 +10,8 @@ class Array
       return false if self[idx] < other_arr[idx] 
     end
   end
+  
+  
 end
 
 
@@ -31,18 +33,12 @@ class Hand
   
   attr_accessor :cards
   
-  def initialize(deck)
-    @deck = deck
-    @cards = []
-    draw_from_deck(deck, 5)
+  def initialize(cards)
+    @cards = cards
   end
   
   def size
-    @cards.size
-  end
-  
-  def draw_from_deck(deck, num)
-    @cards += deck.deal_cards(num)
+    @cards.count
   end
   
   def to_s
@@ -60,53 +56,53 @@ class Hand
     end
   end
   
-  def beats_tie?(other_hand)
+  def get_cards(cards)
+    #receives an array of cards
+    @cards += cards
+  end
+  
+  def check_pair_greater?(hand1, hand2, pairs)
+    h1_arr = hand1.card_val_arr_sorted
+    h2_arr = hand2.card_val_arr_sorted
+
+    h1_arr.reject! { |value| pairs.include?(value) }.sort!
+    h2_arr.reject! { |value| pairs.include?(value) }.sort!
+    h1_arr.greater_than?(h2_arr)
+  end
+  
+  def check_tie_breaker?(other_hand)
     #return true if hand is bigger than other if they're same level
-    if royal_flush? || straight_flush? || flush? || straight?
-      sorted_value_array.more_than?(other_hand.sorted_value_array)
-    elsif worth == :mixed
-      sorted_value_array.more_than?(other_hand.sorted_value_array)
+    if royal_flush? || straight_flush? || flush? || straight? || worth == :singles
+      #will return true if one hand is higher than another, false if otherwise
+      card_val_arr_sorted.greater_than?(other_hand.card_val_arr_sorted)
+      
     elsif four_of_a_kind || full_house || three_of_a_kind
       unique_hand_biggest > other_hand.unique_hand_biggest
     elsif two_pair
-      if two_pair.sort.more_than?(other_hand.two_pair.sort)
-        return true
-      elsif two_pair.sort == other_hand.two_pair.sort
-        our_val_array = sorted_value_array
-        our_pairs = two_pair
-        their_val_array = other_hand.sorted_value_array
-        our_val_array.reject! { |value| our_pairs.include?(value) }
-        their_val_array.reject! { |value| our_pairs.include?(value) }
-        our_val_array.more_than?(their_val_array)
+      if two_pair.sort == other_hand.two_pair.sort
+        check_pair_greater?(self, other_hand, two_pair)
       else
-        return false
+        two_pair.sort.greater_than?(other_hand.two_pair.sort)
       end
     else
-      if self.pair.more_than?(other_hand.pair)
-        return true
-      elsif self.pair == other_hand.pair
-        our_val_array = sorted_value_array
-        our_pairs = self.pair
-        their_val_array = other_hand.sorted_value_array
-        our_val_array.reject! { |value| our_pairs.include?(value) }
-        their_val_array.reject! { |value| our_pairs.include?(value) }
-        our_val_array.more_than?(their_val_array)
+      if self.pair == other_hand.pair
+        check_pair_greater?(self, other_hand, pair)
       else
-        return false
+        pair.greater_than?(other_hand.pair)
       end
     end
   end
   
   def beats?(other_hand)
     if HAND_WORTH[self.worth] == HAND_WORTH[other_hand.worth]
-      beats_tie?(other_hand) 
+      check_tie_breaker?(other_hand) 
     else
       HAND_WORTH[self.worth] > HAND_WORTH[other_hand.worth]
     end
   end
   
   def unique_hand_biggest
-    four_of_a_kind || full_house || threes
+    four_of_a_kind || full_house || three_of_a_kind
   end
   
   def worth
@@ -122,9 +118,9 @@ class Hand
     :singles
   end
   
-  def number_same_card
+  def cards_value_count_hash
     count = Hash.new(0)
-    sorted_value_array.each do |el|
+    card_val_arr_sorted.each do |el|
       count[el] += 1
     end
     
@@ -132,53 +128,56 @@ class Hand
   end
   
   def four_of_a_kind
-    number_same_card.key(4)
+    cards_value_count_hash.key(4)
   end
   
   def three_of_a_kind
-    number_same_card.key(3)
+    cards_value_count_hash.key(3)
   end
   
   def full_house
-    number_same_card.key(3) if three_of_a_kind && pair
+    cards_value_count_hash.key(3) if three_of_a_kind && pair
   end
   
   def two_pair
     pairs = []
-    number_same_card.each do |key, value|
+    cards_value_count_hash.each do |key, value|
       pairs << key if value == 2
     end
     
     return pairs if pairs.size == 2
     
-    nil
+    false
   end
   
   def pair
     pairs = []
-    number_same_card.each do |key, value|
+    cards_value_count_hash.each do |key, value|
       pairs << key if value == 2
     end
     
     return pairs if pairs.size == 1
     
-    nil
+    false
   end
   
-  def sorted_value_array
+  def card_val_arr_sorted
     result = []
     @cards.each do |card|
       result << card.value
     end
+    
     result.sort
   end
   
   def straight?
-    card_values = sorted_value_array
+    card_values = card_val_arr_sorted
     if card_values[-1] == 14 && card_values.include?(4)
       card_values[-1] = 1
       card_values.sort!
     end
+    
+    
     card_values.each_index do |idx|
       next if idx == card_values.length - 1
       return false unless card_values [idx] + 1 == card_values[idx + 1]
@@ -188,7 +187,7 @@ class Hand
   end
   
   def flush?
-    suit = @cards.first.suit
+    suit = @cards[0].suit
     @cards.all? { |card| card.suit == suit }
   end
   
@@ -198,7 +197,7 @@ class Hand
   
   def royal_flush?
     straight? && flush? && 
-    sorted_value_array.include?(13) && sorted_value_array.include?(14)
+    card_val_arr_sorted.include?(13) && card_val_arr_sorted.include?(14)
   end
   
 end
