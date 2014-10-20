@@ -41,7 +41,7 @@ class Player
       puts "Which cards would you like to discard?"
       puts "Enter positions separated by commas, enter q to hold"
       input = gets.chomp
-      return input if input == 'q' || input.match(/\A[0-4]{1}(,[0-4]{1}){1,2}\z/)
+      return input if input == 'q' || input.match(/\A[0-4]{1}(,[0-4]{1}){0,2}\z/)
       puts "invalid input"
     end
   end

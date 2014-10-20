@@ -8,7 +8,7 @@ class Game
   
   def initialize
     @deck = Deck.new
-    @players = [Player.new("computer", 10000, self), Player.new("comp2", 5000, self)]
+    @players = [Player.new("Player1", 10000, self), Player.new("Player2", 5000, self)]
     #the ante is the player who has to place money in, switches every round
     @ante_player = 0
     @round_over = false
@@ -27,6 +27,7 @@ class Game
   
   def start_of_round
     #deck needs to be shuffled at the beginning
+    system("clear")
     @round_over = false
     @deck = Deck.new
     @deck.shuffle!
@@ -44,7 +45,11 @@ class Game
     check_winner
     unless @round_over
       discard_phase
+      reset_all_player_current_bet
+      reset_current_bet
+      ante_player_bet
       betting_phase
+      @round_over = true
     end
     winner
     next_ante_player
@@ -79,6 +84,7 @@ class Game
   
   def ante_player_bet
     @players[@ante_player].bet_amt(10)
+    @current_bet = 10
   end
   
   def reset_all_player_current_bet
@@ -93,11 +99,10 @@ class Game
   end
   
   def betting_phase
-    reset_current_bet
+    
     until betting_phase_over?
       @players.each do |player|
         if player.in_round
-          system("clear")
           puts "********************************************************************"
           puts "#{player.name}, You have $#{player.bank} in your bank"
           player.show_hand
@@ -124,7 +129,6 @@ class Game
   def discard_phase
     @players.each do |player|
       if player.in_round
-        system("clear")
         puts "********************************************************************"
         puts "#{player.name}, It's your turn to discard"
         player.discard_action
@@ -164,7 +168,11 @@ class Game
         winner = player
       end
     end
+    puts "---------------------------------------"
     puts "$#{@pot} paid to #{winner.name}"
+    puts "#{winner.name} won with a #{winner.hand.worth}"
+    puts "---------------------------------------"
+    sleep 5
     winner.receive_amt(@pot)
     winner
   end
