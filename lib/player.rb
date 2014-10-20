@@ -24,7 +24,7 @@ class Player
   def discard_action
     input = get_user_input_for_discard
     if input != 'q'
-      discard_turn(input.split(",").map(&:to_i), @game.deck)
+      discard_turn(input.split(",").map(&:to_i), @game.deck.deal_cards(input.split(",").count))
     end
     
     nil
@@ -32,7 +32,7 @@ class Player
   
   def show_hand
     puts "Your hand contains a #{@hand.worth}"
-    puts @hand.to_s
+    puts "Your hand is #{@hand.to_s}"
   end
     
   def get_user_input_for_discard
@@ -94,9 +94,9 @@ class Player
     @in_round = false
   end
   
-  def discard_turn(card_pos, deck)
+  def discard_turn(card_pos, cards)
     @hand.discard(card_pos)
-    @hand.draw_from_deck(deck, card_pos.count)
+    @hand.get_cards(cards)
   end
   
   def bet_amt(amt)
