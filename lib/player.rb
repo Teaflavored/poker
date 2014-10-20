@@ -3,23 +3,22 @@ require_relative 'hand'
 class Player
   class InputError < StandardError; end
   
-  
   attr_reader :name
   attr_accessor :hand, :bank, :in_round, :money_into_current_bet
   
-  def initialize(name, bankroll, game, deck)
+  def initialize(name, bankroll, game)
     @game = game
     @name = name
     @bank = bankroll
     @money_into_current_bet = 0
   end
   
-  def reset_betting_money
-    @money_into_current_bet = 0
+  def get_hand(cards)
+    @hand = Hand.new(cards)
   end
   
-  def deal_hand
-    @hand = Hand.new(@game.deck)    
+  def reset_betting_money
+    @money_into_current_bet = 0
   end
     
   def discard_action

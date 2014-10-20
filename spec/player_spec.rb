@@ -1,4 +1,5 @@
 require 'player'
+#player requires game object in order to know the current bet
 
 RSpec.describe Player do
   let(:deck) { double("deck") }
